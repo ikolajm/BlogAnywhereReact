@@ -1,0 +1,105 @@
+.edit-post {
+    position: relative;
+    padding-top: 75px !important;
+    padding-bottom: 2rem !important;
+    background: $main-dark;
+    min-height: calc(100vh);
+    height: 100%;
+
+    .background-overlay {
+        position: absolute;
+        width: 100vw;
+        min-height: calc(100vh - 75px);
+        height: calc(100vh - 75px);
+        background: url('../assets/cartographer.png');
+        opacity: .75;
+        z-index: 1;
+        margin-bottom: 2rem;
+    }
+
+    .content {
+        position: relative;
+        z-index: 3;
+        color: $white;
+        max-width: 1000px;
+        margin: 0 auto;
+        margin-top: 1rem;
+
+        .create-post--form {
+            color: $white;
+            max-width: 350px;
+            padding: 1rem;
+            border-radius: $card-border-radius;
+            margin: 0 auto;
+            background: $secondary-dark;
+
+            h1 {
+                font-size: 1.25rem;
+            }
+
+            .input-group {
+                display: flex;
+                flex-direction: column;
+                margin-bottom: .5rem;
+
+                input,
+                textarea {
+                    padding: 0.25rem;
+                    height: 30px;
+                    border-radius: 5px;
+                    background: $main-dark;
+                    color: $white;
+                    outline: none;
+                    border: none;
+                    width: 100%;
+
+                    &:last-of-type {
+                        // margin-bottom: 1rem;
+                    }
+                }
+
+                textarea {
+                    height: 150px;
+                }
+            }
+
+            .form-footer {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-top: 1rem;
+
+                a {
+                    background: $tertiary-dark;
+                    color: $white;
+                    padding: .5rem;
+                    border-radius: $card-border-radius;
+                    text-decoration: none;
+                    transition: .3s;
+
+                    &:hover {
+                        background: darken($tertiary-dark, 10%);
+                        color: darken($white, 10%);
+                    }
+                }
+
+                .save {
+                    outline: none;
+                    border: none;
+                    min-width: 75px;
+                    background: $blue;
+                    color: $white;
+                    padding: .5rem;
+                    border-radius: $card-border-radius;
+                    text-decoration: none;
+                    transition: .3s;
+
+                    &:hover {
+                        background: darken($blue, 10%);
+                        color: darken($white, 10%);
+                    }
+                }
+            }
+        }
+    }
+}
