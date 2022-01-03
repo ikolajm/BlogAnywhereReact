@@ -19,9 +19,11 @@ import Profile from "./components/Profile";
 import EditProfile from "./components/EditProfile";
 import EditComment from "./components/EditComment";
 import DeleteComment from "./components/DeleteComment";
+import { checkToken } from  "./helpers/auth";
 
 export default () => {
   const [CurrentUser, setCurrentUser] = useState<AuthenticatedUser>({
+    id: null,
     uuid: null,
     token: null,
     name: "",
@@ -32,7 +34,10 @@ export default () => {
     // created: "",
     // updated: ""
   });
-  let loggedIn = CurrentUser?.token !== null && CurrentUser?.token !== '' && CurrentUser?.uuid !== null && CurrentUser?.uuid !== ''
+
+  if (localStorage.getItem('token') !== null && !CurrentUser.token) {
+    checkToken(setCurrentUser);
+  }
 
   return (
     <UserContext.Provider value={CurrentUser}>
@@ -47,7 +52,7 @@ export default () => {
             {/* Profile */}
             <Route path="/profile/:id" element={<Profile />} />
             {/* Edit Profile */}
-            <Route path="/edit-profile" element={<EditProfile />} />
+            <Route path="/edit-profile/:id" element={<EditProfile />} />
             {/* View Post */}
             <Route path="/post/:id" element={<Post />} />
             {/* Create Post */}

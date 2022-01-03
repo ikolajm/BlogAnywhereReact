@@ -1,4 +1,5 @@
 export default interface AuthenticatedUser {
+    id: number | null,
     uuid: string | null;
     name: string;
     email: string;

@@ -1,13 +1,52 @@
 import AuthInput from "./reusable/FormInput";
-import React, { useState, useContext } from "react";
-import { NavLink } from "react-router-dom"
+import React, { useState, useContext, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom"
+import UserContext from "../context/UserContext";
+import UserUpdateContext from "../context/UserUpdateContext";
+import { getUserProfile, editUser } from "../helpers/profile";
 
 export default () => {
+    // get the id of the post from url
+    let url = window.location.href;
+    // Split by the post
+    let splitter = url.split('/edit-profile/')
+    let split = splitter[1]
+
+    let CurrentUser: any = useContext(UserContext)
+    let UpdateCurrentUser: any = useContext(UserUpdateContext)
+    const history = useNavigate();
     const [avatar, setAvatar] = useState("")
-    const [_name, setName] = useState("Jake");
-    const [username, setUsername] = useState("jmijake");
-    const [email, setEmail] = useState("email");
-    const [bio, setBio] = useState("It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing.");
+    const [avatarURL, setAvatarURL] = useState("")
+    const [avatarToUpload, setAvatarToUpload] = useState('')
+    const [_name, setName] = useState("");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [bio, setBio] = useState("");
+
+    useEffect(() => {
+        const getItem = async () => {
+            let user = await getUserProfile(split, CurrentUser)
+            setAvatar(user.avatar)
+            // Split by the post
+            let avaSplit = user.avatar.split('.com')
+            let avatarURL = avaSplit[1]
+            setAvatarURL(avatarURL)
+            setName(user.name)
+            setUsername(user.username)
+            setEmail(user.email)
+            setBio(user.bio)
+        }
+        console.log(CurrentUser)
+        // if (CurrentUser.id) {
+            getItem() 
+        // }
+    }, [])
+
+    const fileSelected = (e: any) => {
+        const file = e.target.files[0] 
+        console.log(file)
+        setAvatarToUpload(file)
+    }
 
     return (
         <div className="edit-profile--section">
@@ -15,18 +54,18 @@ export default () => {
 
             <div className="content">
 
-                <form action="POST" className="edit-form">
+                <form encType="multipart/form-data" method="POST" className="edit-form">
                     <h1>Edit your profile</h1>
                     {/* Avatar */}
                     <div className="avatar-input-group">
                         <label htmlFor="avatar">Avatar:</label>
                         <div className="avatar-info">
                             <figure className="profile-avatar">
-                                <img src="https://jmi-bloganywhere.s3.us-east-2.amazonaws.com/images/avatar.png" alt="" />
+                                <img src={avatar} alt="" />
                             </figure>
                             <div className="file-info">
-                                <span>Current URL: images/avatar.svg</span>
-                                <input type="file" id='avatar' name='avatar' />
+                                <span>Current URL: {avatarURL}</span>
+                                <input onChange={e => fileSelected(e)} type="file" id='avatar' name='avatar' />
                             </div>
                         </div>
                     </div>
@@ -60,13 +99,11 @@ export default () => {
                     {/* Bio */}
                     <div className="input-group">
                         <label htmlFor="bio">Bio:</label>
-                        <textarea name="bio" id="bio" cols={10} rows={10}>
-                            It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing
-                        </textarea>
+                        <textarea value={bio} onChange={e => setBio(e.target.value)} name="bio" id="bio" cols={10} rows={10}></textarea>
                     </div>
                     <div className="form-footer">
-                        <NavLink to="/profile/1">Go back</NavLink>
-                        <button className="save">Save</button>
+                        <NavLink to={"/profile/" + CurrentUser.id}>Go back</NavLink>
+                        <button onClick={e => editUser(e, {_name, username, email, bio, avatar: avatarToUpload}, CurrentUser, UpdateCurrentUser, history)} className="save">Save</button>
                     </div>
                 </form>
 

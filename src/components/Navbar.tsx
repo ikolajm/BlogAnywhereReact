@@ -1,14 +1,20 @@
 import {useState, Fragment, useContext} from 'react';
 import { NavLink } from 'react-router-dom';
 import UserContext from "../context/UserContext";
+import UserUpdateContext from "../context/UserUpdateContext";
 import { logout } from "../helpers/auth";
 import {toggleDropdown} from '../helpers/navhelpers';
 
 export default () => {
+    // If any search parameters,get them and have them applied to the db search
+    let url = window.location.href;
+    // Split possible search term from url
+    let splitter = url.split('?q=')
+    // If the url was split, take the term
+    let searchTerm = splitter.length > 1 ? splitter[1] : null
     const CurrentUser = useContext(UserContext);
+    const SetCurrentUser = useContext(UserUpdateContext);
     let loggedIn = CurrentUser?.token !== null && CurrentUser?.token !== '' && CurrentUser?.uuid !== null && CurrentUser?.uuid !== ''
-    console.log(loggedIn)
-    console.log(CurrentUser)
 
     return (
         <nav>
@@ -19,8 +25,8 @@ export default () => {
                     <h1>BlogAnywhere</h1>
                 </NavLink>
                 {/* Searchbar */}
-                <form className='nav-search--form' action="GET">
-                    <input type="text" name="q" placeholder="Search posts..." />
+                <form className='nav-search--form' action="/newsfeed">
+                    <input defaultValue={searchTerm ? searchTerm : ''} type="text" name="q" placeholder="Search posts..." />
                 </form>
                 {/* Avatar section */}
                 {
@@ -29,12 +35,12 @@ export default () => {
                         // Avatar with logout dropdown
                         <div className="dropdown">
                             <div className='nav-avatar--section'>
-                                <figure className="nav-avatar">
-                                    <img src="https://jmi-bloganywhere.s3.us-east-2.amazonaws.com/images/avatar.png" alt="" />
-                                </figure>
+                                <NavLink to={"/profile/" + CurrentUser?.id} className="nav-avatar">
+                                    <img src={CurrentUser?.avatar} alt="" />
+                                </NavLink>
                                 <div className="user-details">
                                     <h1>{CurrentUser?.name}</h1>
-                                    <a href="">@{CurrentUser?.username}</a>
+                                    <NavLink to={'/profile/' + `${CurrentUser?.id}`}>@{CurrentUser?.username}</NavLink>
                                 </div>
                             </div>
                             {/* <!-- Dropdown list --> */}
@@ -42,7 +48,7 @@ export default () => {
                                 <i className="fas fa-caret-down"></i>
                             </button>
                             <div id="dropdown-content" className="dropdown-content">
-                                <button onClick={logout}>
+                                <button onClick={e => logout(e, SetCurrentUser)}>
                                     <i className="fas fa-sign-out-alt"></i>
                                     Logout
                                 </button>

@@ -13,7 +13,7 @@ export default () => {
     const [confirm, setConfirm] = useState("");
     const SetCurrentUser = useContext(UserUpdateContext);
     const CurrentUser = useContext(_UserContext)
-    const loggedIn = CurrentUser?.token !== null && CurrentUser?.token !== '' && CurrentUser?.uuid !== null && CurrentUser?.uuid !== ''
+    let loggedIn = CurrentUser?.token !== null && CurrentUser?.id !== null && CurrentUser?.uuid !== null
 
     if (loggedIn) {
         return <Navigate to='/newsfeed' />

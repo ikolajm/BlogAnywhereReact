@@ -1,6 +1,7 @@
 import { toast } from 'react-toastify';
 import AuthenticatedUser from '../interfaces/AuthenticatedUser';
-
+import axios from "axios";
+import APIURL from "./environment/urlSwitch";
 interface SignupFormDetails {
     name: string,
     username: string,
@@ -9,7 +10,7 @@ interface SignupFormDetails {
     confirm: string
 }
 
-const signup = (e: any, form: SignupFormDetails, SetCurrentUser: any) => {
+const signup = async (e: any, form: SignupFormDetails, SetCurrentUser: any) => {
     e.preventDefault();
     let name = form.name.trim();
     let email = form.email.trim();
@@ -27,19 +28,28 @@ const signup = (e: any, form: SignupFormDetails, SetCurrentUser: any) => {
         return toast.error("Please make sure your passwords match!")
     }
 
-    let loggedInUser = {
-        uuid: 'abc12345',
-        name,
-        email,
-        username,
-        bio: 'Loving bloggin anywhere, this app and my posts both rock, dude',
-        avatar: 'blah',
-        token: 'abc123'
+    // Get user request and set to CurrentUser context
+    let request = await axios.post(
+        `${APIURL}/user/create`,
+        { name, username, email, password, "confirmPassword": confirm },
+        {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    )
+    let data = request.data;
+    if (data && data.user) {
+        let loggedInUser = data.user;
+        loggedInUser.token = data.sessionToken;
+        toast.success("Successfully signed up!");
+        localStorage.setItem('token', data.sessionToken);
+        setTimeout(() => {
+            SetCurrentUser(loggedInUser);
+        }, 300)
+    } else {
+        toast.error(data.message)
     }
-    toast.success("Successfully signed up!");
-    setTimeout(() => {
-        SetCurrentUser(loggedInUser)
-    })
 }
 
 interface LoginFormDetails {
@@ -47,7 +57,7 @@ interface LoginFormDetails {
     password: string,
 }
 
-const login = (e: any, form: LoginFormDetails, SetCurrentUser: any) => {
+const login = async (e: any, form: LoginFormDetails, SetCurrentUser: any) => {
     e.preventDefault();
     let email = form.email.trim();
     let password = form.password.trim();
@@ -57,23 +67,33 @@ const login = (e: any, form: LoginFormDetails, SetCurrentUser: any) => {
         return toast.error("Please ensure all fields are filled in!")
     }
 
-    let loggedInUser = {
-        uuid: 'abc12345',
-        name: 'Jake',
-        email,
-        username: 'jmijake',
-        bio: 'Loving bloggin anywhere, this app and my posts both rock, dude',
-        avatar: 'blah',
-        token: 'abc123'
+    // Get user request and set to CurrentUser context
+    let request = await axios.post(
+        `${APIURL}/user/login`,
+        { email, password },
+        {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }
+    )
+    let data = request.data;
+    if (data && data.user) {
+        let loggedInUser = data.user;
+        loggedInUser.token = data.sessionToken;
+        toast.success("Successfully logged in!");
+        localStorage.setItem('token', data.sessionToken);
+        setTimeout(() => {
+            SetCurrentUser(loggedInUser);
+        }, 300)
+    } else {
+        toast.error(data.message)
     }
-    toast.success("Successfully signed up!");
-    setTimeout(() => {
-        SetCurrentUser(loggedInUser)
-    })
 }
 
-const logout = (SetCurrentUser: any) => {
+const logout = (e:  any, SetCurrentUser: any) => {
     const nullUser: AuthenticatedUser = {
+        id: null,
         uuid: null,
         name: '',
         email: '',
@@ -82,8 +102,41 @@ const logout = (SetCurrentUser: any) => {
         avatar: '',
         token: null
     }
-    // localStorage.removeItem('token');
+    toast.success("Successfully logged out!");
+    localStorage.removeItem('token');
     SetCurrentUser(nullUser);
 }
 
-export { signup, login, logout }
+const checkToken = async (SetCurrentUser: any) => {
+    // If session is still in place and user refreshes
+    let token = localStorage.getItem('token')
+    if (token) {
+        // Check token
+        let request: any = await axios.post(
+            `${APIURL}/user/authenticate`,
+            {token},
+            {
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        )
+        request = request.data;
+        // If auth fails or expires
+        if (request.status === "ERROR") {
+            sessionStorage.removeItem('token');
+            toast.error(request.message)
+            return "FAIL";
+        } else {
+            let user = request.user;
+            user.token = token;
+            SetCurrentUser(user);
+        }
+    }
+    // If a protected endpoint is hit but there is no token
+    if (!token) {
+        return "FAIL"
+    }
+}
+
+export { signup, login, logout, checkToken }

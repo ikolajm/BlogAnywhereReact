@@ -1,62 +1,92 @@
-import { NavLink } from "react-router-dom"
+import moment from "moment";
+import { useContext, useEffect, useState } from "react"
+import { NavLink, Navigate, useNavigate } from "react-router-dom"
+import UserContext from "../context/UserContext";
+import { deleteComment,  getCommentForDelete } from "../helpers/comment";
 
 export default () => {
+    // get the id of the post from url
+    let url = window.location.href;
+    // Split by the post
+    let splitter = url.split('/delete-comment/')
+    let split = splitter[1]
+    const history = useNavigate();
+    let CurrentUser: any = useContext(UserContext)
+    const [comment, setComment]: any = useState({id: null, postId: ''})
+    let loggedIn = CurrentUser?.token !== null && CurrentUser?.id !== null && CurrentUser?.uuid !== null
+
+    if (!loggedIn) {
+        return <Navigate to='/login' />
+    }
+
+    useEffect(() => {
+        let commentId = split
+        const getItem = async () => {
+            let comment = await getCommentForDelete(commentId, CurrentUser)
+            setComment(comment)
+        }
+        getItem()
+    }, [])
+    console.log(comment)
+
     return (
             <section className="delete-comment">
 
                 <div className="background-overlay"></div>
 
                 <div className="content">
-                    <form method="POST" action="">
-                        <h1>Delete comment</h1>
-                        <div className="post-card">
-                            <div className="post-card-content">
-                                {/* Head  */}
-                                <div className="post-card-head">
-                                    <div className="user-details-container">
-                                        {/* Avatar  */}
-                                        <figure className="avatar">
-                                            <img src="https://jmi-bloganywhere.s3.us-east-2.amazonaws.com/images/avatar.png" alt="" />
-                                        </figure>
-                                        {/* Name  */}
-                                        <div className="user-details">
-                                            <h1>Jake</h1>
-                                            <NavLink to="/profile/1">@jmijake</NavLink>
+                    {
+                        comment && comment.id ?
+                            <form method="POST" action="">
+                                <h1>Delete comment</h1>
+                                <div className="post-card">
+                                    <div className="post-card-content">
+                                        {/* Head  */}
+                                        <div className="post-card-head">
+                                            <div className="user-details-container">
+                                                {/* Avatar  */}
+                                                <figure className="avatar">
+                                                    <img src={comment.user.avatar} alt="" />
+                                                </figure>
+                                                {/* Name  */}
+                                                <div className="user-details">
+                                                    <h1>{comment.user.name}</h1>
+                                                    <NavLink to={"/profile/" + comment.user.id}>@{comment.user.username}</NavLink>
+                                                </div>
+                                            </div>
+                                            {/* Date */}
+                                            <span>{moment(comment.createdAt).format("LT")}</span>
+                                        </div>
+                                    
+                                        {/* Body */}
+                                        <div className="post-card-body">
+                                            <p>{comment.content}</p>
+                                        </div>
+                                    
+                                        {/* Like/participation */}
+                                        <div className="post-card-footer">
+                                            <button disabled className="likes">
+                                                {
+                                                    comment.commentlikeIds.includes(CurrentUser.id) ?
+                                                        <i className="fas fa-heart"></i>
+                                                        :
+                                                        <i className="far fa-heart"></i>
+                                                }
+                                                <span>{comment.commentlikes.length} likes</span>
+                                            </button>
                                         </div>
                                     </div>
-                                    {/* Date */}
-                                    <span>1 days ago</span>
+                                
                                 </div>
-                            
-                                {/* Body */}
-                                <div className="post-card-body">
-                                    <p>It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+                                <p>Are you sure you want to delete this comment?</p>
+                                <div className="button-container">
+                                    <NavLink to={"/post/" + comment.postId} type="submit">Cancel</NavLink>
+                                    <button onClick={e => deleteComment(e, comment.id, comment.postId, CurrentUser, history)} className="save" type="submit">Delete</button>
                                 </div>
-                            
-                                {/* Like/participation */}
-                                <div className="post-card-footer">
-                                    <button disabled className="likes">
-                                        {/* {
-                                            post.liked ? */}
-                                                <i className="fas fa-heart"></i>
-                                        {/* //         :
-                                        //         <i class="far fa-heart"></i>
-                                        // } */}
-                                        <span>1 likes</span>
-                                    </button>
-                                </div>
-                            </div>
-                        
-                        </div>
-                        <p>Are you sure you want to delete this comment?</p>
-                        <div className="button-container">
-                            <NavLink to="/post/1" type="submit">Cancel</NavLink>
-                            <button className="save" type="submit">Delete</button>
-                        </div>
-                    </form>
+                            </form>
+                            : <span>Retrieving message</span>
+                    }
                 </div>
-                
-
             </section>
 
     )
